@@ -3,14 +3,15 @@ use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::schema::Event;
+use tokio::sync::mpsc::error::SendError;
 
-pub trait Controller {
+pub trait Controller: Send {
     fn register(&mut self, user: String, tx: UnboundedSender<Event>);
-    fn send(&self, event: Event, to_user: String);
+    fn send(&self, event: Event, to_user: String) -> Result<(), SendError<Event>>;
 }
 
 #[derive(Default)]
-pub struct InMemController {
+pub(super) struct InMemController {
     users: HashMap<String, UnboundedSender<Event>>,
 }
 
@@ -19,9 +20,10 @@ impl Controller for InMemController {
         self.users.insert(user, tx);
     }
 
-    fn send(&self, event: Event, to_user: String) {
+    fn send(&self, event: Event, to_user: String) -> Result<(), SendError<Event>> {
         if let Some(tx) = self.users.get(&to_user) {
-            tx.send(event);
+            return tx.send(event);
         }
+        Ok(())
     }
 }

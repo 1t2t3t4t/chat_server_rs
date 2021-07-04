@@ -1,12 +1,11 @@
 use crate::controller::{Controller, InMemController};
 use async_graphql::{
-    Context, EmptyMutation, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription,
-    Union,
+    Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union,
 };
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::Mutex;
-use tokio::time::Duration;
-use tokio_stream::wrappers::{IntervalStream, UnboundedReceiverStream};
+
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio_stream::{Stream, StreamExt};
 
 #[derive(Default)]
@@ -27,14 +26,17 @@ pub struct Mutation;
 #[Object]
 impl Mutation {
     async fn send_msg(&self, ctx: &Context<'_>, msg: String, to: String) -> bool {
-        let controller = ctx.data::<Mutex<InMemController>>().unwrap();
+        let controller = ctx.data::<Mutex<Box<dyn Controller>>>().unwrap();
         let lock = controller.lock().await;
         let new_msg = Message {
             msg,
             sender: "SomeOne".to_string(),
         };
-        lock.send(Event::Message(new_msg), to);
-        true
+        if let Ok(_) = lock.send(Event::Message(new_msg), to) {
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -61,14 +63,11 @@ pub struct MySubscription;
 impl MySubscription {
     async fn join(&self, ctx: &Context<'_>, req: JoinRequest) -> impl Stream<Item = Event> {
         println!("Get Join");
-        let in_mem_controller = ctx.data::<Mutex<InMemController>>();
+        let in_mem_controller = ctx.data::<Mutex<Box<dyn Controller>>>();
         let mut lock = in_mem_controller.unwrap().try_lock().unwrap();
         let (tx, rx) = unbounded_channel::<Event>();
         lock.register(req.name, tx);
-        UnboundedReceiverStream::new(rx).map(|x| {
-            println!("Get {:?}", x);
-            x
-        })
+        UnboundedReceiverStream::new(rx)
     }
 }
 

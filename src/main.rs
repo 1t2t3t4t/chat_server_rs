@@ -1,7 +1,7 @@
 mod controller;
 mod schema;
 
-use crate::controller::InMemController;
+use crate::controller::{InMemController, Controller};
 use crate::schema::{Mutation, MySchema, MySubscription, Query};
 use actix_web::guard::{Get, Header};
 use actix_web::web::{resource, Data, Payload};
@@ -33,7 +33,7 @@ async fn index_ws(
 }
 
 fn build_schema() -> MySchema {
-    let controller = Mutex::new(InMemController::default());
+    let controller: Mutex<Box<dyn Controller>> = Mutex::new(Box::new(InMemController::default()));
     MySchema::build(Query::default(), Mutation, MySubscription)
         .data(controller)
         .finish()
