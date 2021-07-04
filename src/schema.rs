@@ -9,8 +9,18 @@ use tokio::time::Duration;
 use tokio_stream::wrappers::{IntervalStream, UnboundedReceiverStream};
 use tokio_stream::{Stream, StreamExt};
 
+#[derive(Default)]
+pub struct HelloWorldQuery;
+
+#[Object]
+impl HelloWorldQuery {
+    async fn hello_world(&self) -> String {
+        "Hello World".into()
+    }
+}
+
 #[derive(MergedObject, Default)]
-pub struct Query;
+pub struct Query(HelloWorldQuery);
 
 pub struct Mutation;
 
