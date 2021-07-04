@@ -16,7 +16,6 @@ async fn index(schema: Data<MySchema>, req: Request) -> Response {
     schema.execute(req.into_inner()).await.into()
 }
 
-#[actix_web::get("/")]
 async fn index_playground() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
@@ -53,7 +52,11 @@ async fn main() -> std::io::Result<()> {
                     .guard(Header("upgrade", "websocket"))
                     .to(index_ws),
             )
-            .service(index_playground)
+            .service(
+                resource("/")
+                    .guard(Get())
+                    .to(index_playground)
+            )
     })
     .bind("127.0.0.1:3000")?
     .run()
