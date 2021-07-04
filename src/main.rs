@@ -1,14 +1,17 @@
 mod controller;
+mod env_var;
 mod schema;
 
 use crate::controller::{Controller, InMemController};
 use crate::schema::{Mutation, MySchema, MySubscription, Query};
 use actix_web::guard::{Get, Header};
+use actix_web::middleware::Compress;
 use actix_web::web::{resource, Data, Payload};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result};
 use async_graphql::http::playground_source;
 use async_graphql::http::GraphQLPlaygroundConfig;
 use async_graphql_actix_web::{Request, Response, WSSubscription};
+use env_var::get_env;
 use tokio::sync::Mutex;
 
 #[actix_web::post("/")]
@@ -42,9 +45,16 @@ fn build_schema() -> MySchema {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let schema = build_schema();
+    let env = get_env();
+    let port = if let Some(port) = env.port {
+        port
+    } else {
+        "3000".to_string()
+    };
     HttpServer::new(move || {
         App::new()
             .data(schema.clone())
+            .wrap(Compress::default())
             .service(index)
             .service(
                 resource("/")
@@ -54,7 +64,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(resource("/").guard(Get()).to(index_playground))
     })
-    .bind("127.0.0.1:3000")?
+    .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await
 }

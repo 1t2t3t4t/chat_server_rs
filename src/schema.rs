@@ -6,15 +6,21 @@ use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::Mutex;
 
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use tokio_stream::{Stream, StreamExt};
+use tokio_stream::Stream;
 
 #[derive(Default)]
 pub struct HelloWorldQuery;
 
 #[Object]
 impl HelloWorldQuery {
-    async fn hello_world(&self) -> String {
-        "Hello World".into()
+    async fn hello_world(&self) -> Vec<Message> {
+        (0..100)
+            .into_iter()
+            .map(|i| Message {
+                msg: format!("Hello no {}", i),
+                sender: "System".into(),
+            })
+            .collect()
     }
 }
 
@@ -32,7 +38,7 @@ impl Mutation {
             msg,
             sender: "SomeOne".to_string(),
         };
-        if let Ok(_) = lock.send(Event::Message(new_msg), to) {
+        if let Ok(_) = lock.send(Event::Message(new_msg), &to) {
             true
         } else {
             false
@@ -52,9 +58,15 @@ pub struct Message {
     sender: String,
 }
 
+#[derive(SimpleObject, Debug)]
+pub struct Connected {
+    msg: String,
+}
+
 #[derive(Union, Debug)]
 pub enum Event {
     Message(Message),
+    Connected(Connected),
 }
 
 pub struct MySubscription;
@@ -66,7 +78,14 @@ impl MySubscription {
         let in_mem_controller = ctx.data::<Mutex<Box<dyn Controller>>>();
         let mut lock = in_mem_controller.unwrap().try_lock().unwrap();
         let (tx, rx) = unbounded_channel::<Event>();
-        lock.register(req.name, tx);
+        lock.register(&req.name, tx);
+        lock.send(
+            Event::Connected(Connected {
+                msg: "Welcome to the server!!".into(),
+            }),
+            &req.name,
+        )
+        .unwrap();
         UnboundedReceiverStream::new(rx)
     }
 }
