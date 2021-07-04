@@ -25,7 +25,11 @@ async fn index_playground() -> Result<HttpResponse> {
         )))
 }
 
-async fn index_ws(schema: Data<MySchema>, req: HttpRequest, payload: Payload) -> Result<HttpResponse> {
+async fn index_ws(
+    schema: Data<MySchema>,
+    req: HttpRequest,
+    payload: Payload,
+) -> Result<HttpResponse> {
     WSSubscription::start(MySchema::clone(&*schema), &req, payload)
 }
 
