@@ -1,7 +1,7 @@
 mod controller;
 mod schema;
 
-use crate::controller::{InMemController, Controller};
+use crate::controller::{Controller, InMemController};
 use crate::schema::{Mutation, MySchema, MySubscription, Query};
 use actix_web::guard::{Get, Header};
 use actix_web::web::{resource, Data, Payload};
@@ -52,11 +52,7 @@ async fn main() -> std::io::Result<()> {
                     .guard(Header("upgrade", "websocket"))
                     .to(index_ws),
             )
-            .service(
-                resource("/")
-                    .guard(Get())
-                    .to(index_playground)
-            )
+            .service(resource("/").guard(Get()).to(index_playground))
     })
     .bind("127.0.0.1:3000")?
     .run()

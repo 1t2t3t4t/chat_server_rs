@@ -1,4 +1,4 @@
-use crate::controller::{Controller, InMemController};
+use crate::controller::Controller;
 use async_graphql::{
     Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union,
 };
