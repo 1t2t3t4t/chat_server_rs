@@ -1,7 +1,7 @@
+use std::io::Read;
+
 use crate::controller::Controller;
-use async_graphql::{
-    Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union,
-};
+use async_graphql::{Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union, Upload};
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::Mutex;
 
@@ -43,6 +43,16 @@ impl Mutation {
         } else {
             false
         }
+    }
+
+    async fn upload_file(&self, ctx: &Context<'_>, file: Upload) -> String {
+        let file_val = file.value(ctx).unwrap();
+        let mut file = file_val.content;
+        let metadata = file.metadata().unwrap();
+        let mut file_bytes = vec![0; metadata.len() as usize];
+        file.read(&mut file_bytes).unwrap();
+        std::fs::write(&file_val.filename, file_bytes).unwrap();
+        file_val.filename
     }
 }
 

@@ -51,6 +51,10 @@ async fn main() -> std::io::Result<()> {
     } else {
         "3000".to_string()
     };
+    let bind_ip = format!("0.0.0.0:{}", port);
+
+    println!("Server start on {}", bind_ip);
+
     HttpServer::new(move || {
         App::new()
             .data(schema.clone())
@@ -64,7 +68,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(resource("/").guard(Get()).to(index_playground))
     })
-    .bind(format!("127.0.0.1:{}", port))?
+    .bind(bind_ip)?
     .run()
     .await
 }
