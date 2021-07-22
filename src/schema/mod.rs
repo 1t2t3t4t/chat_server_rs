@@ -1,3 +1,5 @@
+mod query;
+
 use std::io::Read;
 
 use crate::controller::Controller;
@@ -9,25 +11,10 @@ use tokio::sync::Mutex;
 
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio_stream::Stream;
-
-#[derive(Default)]
-pub struct HelloWorldQuery;
-
-#[Object]
-impl HelloWorldQuery {
-    async fn hello_world(&self) -> Vec<Message> {
-        (0..100)
-            .into_iter()
-            .map(|i| Message {
-                msg: format!("Hello no {}", i),
-                sender: "System".into(),
-            })
-            .collect()
-    }
-}
+use crate::schema::query::hello_world::HelloWorldQuery;
 
 #[derive(MergedObject, Default)]
-pub struct Query(HelloWorldQuery);
+pub struct QueryRoot(HelloWorldQuery);
 
 pub struct Mutation;
 
@@ -102,4 +89,4 @@ impl MySubscription {
     }
 }
 
-pub type MySchema = Schema<Query, Mutation, MySubscription>;
+pub type MySchema = Schema<QueryRoot, Mutation, MySubscription>;

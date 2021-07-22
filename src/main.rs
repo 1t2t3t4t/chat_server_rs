@@ -3,7 +3,7 @@ mod env_var;
 mod schema;
 
 use crate::controller::{Controller, InMemController};
-use crate::schema::{Mutation, MySchema, MySubscription, Query};
+use crate::schema::{Mutation, MySchema, MySubscription, QueryRoot};
 use actix_cors::Cors;
 use actix_web::guard::{Get, Header};
 use actix_web::middleware::Compress;
@@ -38,7 +38,7 @@ async fn index_ws(
 
 fn build_schema() -> MySchema {
     let controller: Mutex<Box<dyn Controller>> = Mutex::new(Box::new(InMemController::default()));
-    MySchema::build(Query::default(), Mutation, MySubscription)
+    MySchema::build(QueryRoot::default(), Mutation, MySubscription)
         .data(controller)
         .finish()
 }
