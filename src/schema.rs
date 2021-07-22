@@ -1,7 +1,9 @@
 use std::io::Read;
 
 use crate::controller::Controller;
-use async_graphql::{Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union, Upload};
+use async_graphql::{
+    Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union, Upload,
+};
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::Mutex;
 

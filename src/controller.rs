@@ -11,8 +11,8 @@ pub trait Controller: Send {
 }
 
 #[derive(Default)]
-pub(super) struct InMemController {
-    users: HashMap<String, UnboundedSender<Event>>,
+pub(crate) struct InMemController {
+    users: HashMap<String, UnboundedSender<Event>>
 }
 
 impl Controller for InMemController {

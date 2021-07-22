@@ -4,6 +4,7 @@ mod schema;
 
 use crate::controller::{Controller, InMemController};
 use crate::schema::{Mutation, MySchema, MySubscription, Query};
+use actix_cors::Cors;
 use actix_web::guard::{Get, Header};
 use actix_web::middleware::Compress;
 use actix_web::web::{resource, Data, Payload};
@@ -46,6 +47,7 @@ fn build_schema() -> MySchema {
 async fn main() -> std::io::Result<()> {
     let schema = build_schema();
     let env = get_env();
+    let _ = get_env();
     let port = if let Some(port) = env.port {
         port
     } else {
@@ -58,6 +60,12 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(schema.clone())
+            .wrap(
+                Cors::default()
+                    .allow_any_header()
+                    .allow_any_method()
+                    .allow_any_origin(),
+            )
             .wrap(Compress::default())
             .service(index)
             .service(
