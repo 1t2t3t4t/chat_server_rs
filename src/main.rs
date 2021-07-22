@@ -28,6 +28,13 @@ async fn index_playground() -> Result<HttpResponse> {
         )))
 }
 
+#[actix_web::get("/voyager")]
+async fn index_voyager() -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(include_str!("voyager/index.html")))
+}
+
 async fn index_ws(
     schema: Data<MySchema>,
     req: HttpRequest,
@@ -75,6 +82,7 @@ async fn main() -> std::io::Result<()> {
                     .to(index_ws),
             )
             .service(resource("/").guard(Get()).to(index_playground))
+            .service(index_voyager)
     })
     .bind(bind_ip)?
     .run()
