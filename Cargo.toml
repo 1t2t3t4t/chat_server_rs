@@ -12,3 +12,7 @@ async-graphql-actix-web = "2.9.7"
 tokio = "1.8.0"
 tokio-stream = "0.1.6"
 actix-cors = "0.5.4"
+chat_core = { path = "chat_core" }
+
+[workspace]
+members = ["chat_core"]
