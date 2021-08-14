@@ -1,11 +1,12 @@
-FROM rust:1.53-slim AS recipe_builder
+FROM rust:1.54-slim AS chef
 RUN cargo install cargo-chef --version 0.1.22
+
+FROM chef AS recipe_builder
 WORKDIR /app
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
-FROM rust:1.53-slim AS deps_builder
-RUN cargo install cargo-chef --version 0.1.22
+FROM chef AS deps_builder
 WORKDIR /app
 COPY --from=recipe_builder /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
@@ -19,8 +20,8 @@ RUN cargo build --release
 
 FROM rust:1.53-slim as runtime
 WORKDIR /app
-COPY --from=builder /app/target/release/chat_server /usr/local/bin/chat_server
-RUN ls /usr/local/bin
+COPY --from=builder /app/target target
+COPY . .
 ENV PORT=80
 EXPOSE 80
-ENTRYPOINT ["chat_server"]
+ENTRYPOINT ["cargo", "run", "--release"]

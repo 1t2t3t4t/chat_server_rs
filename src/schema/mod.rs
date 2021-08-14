@@ -9,9 +9,9 @@ use async_graphql::{
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::Mutex;
 
+use crate::schema::query::hello_world::HelloWorldQuery;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio_stream::Stream;
-use crate::schema::query::hello_world::HelloWorldQuery;
 
 #[derive(MergedObject, Default)]
 pub struct QueryRoot(HelloWorldQuery);
@@ -73,7 +73,6 @@ pub struct MySubscription;
 #[Subscription]
 impl MySubscription {
     async fn join(&self, ctx: &Context<'_>, req: JoinRequest) -> impl Stream<Item = Event> {
-        println!("Get Join");
         let in_mem_controller = ctx.data::<Mutex<Box<dyn Controller>>>();
         let mut lock = in_mem_controller.unwrap().try_lock().unwrap();
         let (tx, rx) = unbounded_channel::<Event>();

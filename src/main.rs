@@ -1,9 +1,11 @@
 mod controller;
 mod env_var;
 mod schema;
+mod voyager;
 
 use crate::controller::{Controller, InMemController};
 use crate::schema::{Mutation, MySchema, MySubscription, QueryRoot};
+use crate::voyager::voyager_source;
 use actix_cors::Cors;
 use actix_web::guard::{Get, Header};
 use actix_web::middleware::Compress;
@@ -32,7 +34,7 @@ async fn index_playground() -> Result<HttpResponse> {
 async fn index_voyager() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(include_str!("voyager/index.html")))
+        .body(voyager_source("/")))
 }
 
 async fn index_ws(
@@ -54,7 +56,6 @@ fn build_schema() -> MySchema {
 async fn main() -> std::io::Result<()> {
     let schema = build_schema();
     let env = get_env();
-    let _ = get_env();
     let port = if let Some(port) = env.port {
         port
     } else {
