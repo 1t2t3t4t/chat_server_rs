@@ -4,7 +4,7 @@ use std::io::Read;
 
 use crate::controller::Controller;
 use async_graphql::{
-    Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union, Upload,
+    Context, InputObject, MergedObject, Object, Schema, SimpleObject, Subscription, Union, Upload, Result
 };
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::Mutex;
@@ -72,9 +72,9 @@ pub struct MySubscription;
 
 #[Subscription]
 impl MySubscription {
-    async fn join(&self, ctx: &Context<'_>, req: JoinRequest) -> impl Stream<Item = Event> {
-        let in_mem_controller = ctx.data::<Mutex<Box<dyn Controller>>>();
-        let mut lock = in_mem_controller.unwrap().try_lock().unwrap();
+    async fn join(&self, ctx: &Context<'_>, req: JoinRequest) -> Result<impl Stream<Item = Event>> {
+        let in_mem_controller = ctx.data::<Mutex<Box<dyn Controller>>>()?;
+        let mut lock = in_mem_controller.try_lock()?;
         let (tx, rx) = unbounded_channel::<Event>();
         lock.register(&req.name, tx);
         lock.send(
@@ -82,9 +82,8 @@ impl MySubscription {
                 msg: "Welcome to the server!!".into(),
             }),
             &req.name,
-        )
-        .unwrap();
-        UnboundedReceiverStream::new(rx)
+        )?;
+        Ok(UnboundedReceiverStream::new(rx))
     }
 }
 
