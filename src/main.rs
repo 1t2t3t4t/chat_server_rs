@@ -15,11 +15,40 @@ use async_graphql::http::playground_source;
 use async_graphql::http::GraphQLPlaygroundConfig;
 use async_graphql_actix_web::{Request, Response, WSSubscription};
 use env_var::get_env;
+use std::collections::HashMap;
 use tokio::sync::Mutex;
 
+#[derive(Default)]
+pub struct CookieSetter {
+    cookies: Mutex<HashMap<String, String>>,
+}
+
+impl CookieSetter {
+    fn parsed(&self) -> String {
+        let lock_cookies = self.cookies.try_lock().unwrap();
+        let mut res = String::new();
+        for (k, v) in lock_cookies.iter() {
+            res.push_str(&format!("{}={};", k, v));
+        }
+        res
+    }
+}
+
 #[actix_web::post("/")]
-async fn index(schema: Data<MySchema>, req: Request) -> Response {
-    schema.execute(req.into_inner()).await.into()
+async fn index(
+    schema: Data<MySchema>,
+    req: Request,
+    cookie_setter: Data<CookieSetter>,
+) -> Response {
+    let mut inner_req = req.into_inner();
+    inner_req = inner_req.data(cookie_setter.clone().into_inner());
+    let mut response = schema.execute(inner_req).await;
+
+    response
+        .http_headers
+        .append("Set-Cookie", cookie_setter.parsed());
+
+    response.into()
 }
 
 async fn index_playground() -> Result<HttpResponse> {
@@ -68,6 +97,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(schema.clone())
+            .data(CookieSetter::default())
             .wrap(
                 Cors::default()
                     .allow_any_header()

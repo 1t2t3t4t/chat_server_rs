@@ -8,9 +8,9 @@ use tokio::sync::mpsc::error::SendError;
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct UserId(String);
 
-impl Into<UserId> for &str {
-    fn into(self) -> UserId {
-        UserId(self.to_string())
+impl From<&str> for UserId {
+    fn from(st: &str) -> Self {
+        Self(st.to_string())
     }
 }
 
